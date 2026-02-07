@@ -1,26 +1,588 @@
 @import "tailwindcss";
 
+.footer-pulse {
+  -webkit-text-stroke: 1.5px rgba(0,0,0,0.06);
+}
+.footer-pulse-salmon {
+  -webkit-text-stroke: 1px rgba(255,150,120,0.12);
+}
+.group:hover .footer-pulse {
+  -webkit-text-stroke: 1.5px rgba(0,0,0,1);
+}
+.group:hover .footer-pulse-salmon {
+  -webkit-text-stroke: 1px rgba(255,150,120,0);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Original Uplane Palette */
+  --c-salmon: #FF9678;
+  --c-periwinkle: #CCD7E4;
+  --c-sage: #C8DFA8;
+  --c-cream: #F5F2EA;
+  --c-ink: #1A1A18;
+  --c-paper: #FFFFFF;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-salmon: var(--c-salmon);
+  --color-periwinkle: var(--c-periwinkle);
+  --color-sage: var(--c-sage);
+  --color-cream: var(--c-cream);
+  --color-ink: var(--c-ink);
+  --color-paper: var(--c-paper);
+  --font-serif: 'Instrument Serif', serif;
+  --font-sans: 'Inter', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+  background-color: var(--c-cream);
+  font-family: 'Inter', sans-serif !important;
+  color: var(--c-ink);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global vertical edge lines on body — immune to overflow-x clipping */
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-color);
+  pointer-events: none;
+  z-index: 1;
+}
+
+body::before {
+  left: max(0px, calc(50% - (var(--content-max) + var(--vertical-offset) * 2) / 2));
+}
+
+body::after {
+  right: max(0px, calc(50% - (var(--content-max) + var(--vertical-offset) * 2) / 2));
+}
+
+/*
+  Cal.com style lines:
+  - Two vertical lines with breathing room from content
+  - Horizontal lines span full viewport
+  - "+" markers at intersections with consistent gaps
+  - Content width: max-w-6xl = 1152px, with px-6 = 24px padding
+*/
+
+:root {
+  --content-max: 1152px;
+  --content-padding: 24px;
+  --line-color: rgba(0,0,0,0.12);
+  --plus-color: rgba(0,0,0,0.3);
+  --plus-size: 16px;
+  --plus-thickness: 2px;
+  --gap: 6px;
+  --vertical-offset: 16px; /* breathing room from content */
+}
+
+/* Vertical edge lines — now rendered via body pseudo-elements above.
+   Keep .edge-lines class only for the fixed mobile-menu overlay. */
+.edge-lines {
+  display: none;
+}
+
+/* Re-enable inside fixed overlays where body lines are hidden */
+.menu-overlay .edge-lines {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% + var(--vertical-offset) * 2);
+  max-width: calc(var(--content-max) + var(--vertical-offset) * 2);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.menu-overlay .edge-lines::before,
+.menu-overlay .edge-lines::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-color);
+}
+
+.menu-overlay .edge-lines::before {
+  left: 0;
+}
+
+.menu-overlay .edge-lines::after {
+  right: 0;
+}
+
+/* Hide vertical lines where + markers intersect - done via section dividers */
+
+/* Section divider - full width horizontal with + markers */
+.section-divider {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+/* The + markers - positioned at vertical line locations */
+.plus-left,
+.plus-right {
+  position: absolute;
+  width: var(--plus-size);
+  height: var(--plus-size);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+/* Position + markers aligned with vertical lines (with offset for breathing room) */
+.plus-left {
+  left: max(0px, calc(50vw - var(--content-max) / 2 - var(--vertical-offset)));
+  transform: translate(-50%, -50%);
+}
+
+.plus-right {
+  right: max(0px, calc(50vw - var(--content-max) / 2 - var(--vertical-offset)));
+  transform: translate(50%, -50%);
+}
+
+/* + shape using pseudo elements */
+.plus-left::before,
+.plus-left::after,
+.plus-right::before,
+.plus-right::after {
+  content: '';
+  position: absolute;
+  background: var(--plus-color);
+}
+
+/* Horizontal bar of + */
+.plus-left::before,
+.plus-right::before {
+  width: var(--plus-size);
+  height: var(--plus-thickness);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Vertical bar of + */
+.plus-left::after,
+.plus-right::after {
+  width: var(--plus-thickness);
+  height: var(--plus-size);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Left horizontal line - from viewport edge to left + (with gap) */
+.section-divider-line-left {
+  position: absolute;
+  left: 0;
+  height: 1px;
+  background: var(--line-color);
+  width: calc(max(0px, 50vw - var(--content-max) / 2 - var(--vertical-offset)) - var(--plus-size) / 2 - var(--gap));
+}
+
+/* Right horizontal line - from right + to viewport edge (with gap) */
+.section-divider-line-right {
+  position: absolute;
+  right: 0;
+  height: 1px;
+  background: var(--line-color);
+  width: calc(max(0px, 50vw - var(--content-max) / 2 - var(--vertical-offset)) - var(--plus-size) / 2 - var(--gap));
+}
+
+/* Middle horizontal line - between the two + markers (with gaps on both ends) */
+.section-divider-inner {
+  position: absolute;
+  height: 1px;
+  background: var(--line-color);
+  left: calc(max(0px, 50vw - var(--content-max) / 2 - var(--vertical-offset)) + var(--plus-size) / 2 + var(--gap));
+  right: calc(max(0px, 50vw - var(--content-max) / 2 - var(--vertical-offset)) + var(--plus-size) / 2 + var(--gap));
+}
+
+/* Vertical line gap covers - hide vertical lines near + markers */
+.vertical-gap-left,
+.vertical-gap-right {
+  position: absolute;
+  width: 3px;
+  height: calc(var(--plus-size) + var(--gap) * 2);
+  background: var(--c-cream);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.vertical-gap-left {
+  left: calc(max(0px, 50vw - var(--content-max) / 2 - var(--vertical-offset)) - 1px);
+}
+
+.vertical-gap-right {
+  right: calc(max(0px, 50vw - var(--content-max) / 2 - var(--vertical-offset)) - 1px);
+}
+
+h1, h2, h3, h4, .serif {
+  font-family: 'Instrument Serif', serif !important;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+.card {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: rgba(0,0,0,0.1);
+}
+
+.tag {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  border: 0.5px solid rgba(26, 26, 24, 0.2);
+}
+
+/* Link with animated underline */
+.link-btn {
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.link-btn::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: 0;
+  left: 0;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.link-btn:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-20px, -10px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes draw-line {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-drift {
+  animation: drift 20s linear infinite alternate;
+}
+
+.animate-spin-slow {
+  animation: spin 10s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+/* Orbit animation for icons */
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-orbit {
+  animation: orbit 20s linear infinite;
+}
+
+.animate-orbit-reverse {
+  animation: orbit 25s linear infinite reverse;
+}
+
+/* Draw line animation for SVG paths */
+.animate-draw-line {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: draw-line 1.5s ease-out forwards;
+}
+
+/* Bar grow animation */
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.animate-bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 0.6s ease-out forwards;
+}
+
+/* Premium connection line pulse */
+@keyframes connection-pulse {
+  0%, 100% { stroke-opacity: 0.2; }
+  50% { stroke-opacity: 0.6; }
+}
+
+.animate-connection-pulse {
+  animation: connection-pulse 2s ease-in-out infinite;
+}
+
+/* Subtle glow pulse for icons */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 150, 120, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(255, 150, 120, 0.15); }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Chart bar reveal */
+@keyframes chart-reveal {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.animate-chart-reveal {
+  transform-origin: bottom;
+  animation: chart-reveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Counter tick animation */
+@keyframes counter-tick {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-counter {
+  animation: counter-tick 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Circular progress */
+@keyframes progress-fill {
+  from { stroke-dashoffset: 251; }
+}
+
+.animate-progress {
+  animation: progress-fill 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Soft breathing for premium feel */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Text balance */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Integration card entrance animation */
+@keyframes integration-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.integration-card {
+  opacity: 0;
+  animation: integration-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-play-state: paused;
+}
+
+.integrations-visible .integration-card {
+  animation-play-state: running;
+}
+
+/* ===== Responsive edge lines + dividers for tablet/mobile ===== */
+/* Line position from edge = (100vw - content-max)/2 - vertical-offset */
+@media (max-width: 1200px) {
+  :root {
+    --content-max: calc(100vw - 80px); /* lines ~24px from edge */
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --content-max: calc(100vw - 76px); /* lines ~22px from edge on tablet */
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --content-max: calc(100vw - 72px); /* lines ~20px from edge */
+    --plus-size: 12px;
+  }
+}
+
+/* ===== Full-screen menu overlay ===== */
+@keyframes menu-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes menu-item-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-overlay {
+  animation: menu-overlay-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.menu-overlay-item {
+  opacity: 0;
+  animation: menu-item-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hamburger bar morphing */
+.hamburger-bar {
+  display: block;
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 1.5px;
+  background: white;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Body scroll lock when menu is open */
+body.menu-open {
+  overflow: hidden;
+}
+
+/* Selection color */
+::selection {
+  background: var(--c-salmon);
+  color: var(--c-ink);
 }
