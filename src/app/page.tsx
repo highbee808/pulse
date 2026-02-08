@@ -1,8 +1,98 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import Marquee from 'react-fast-marquee';
+
+// ===== Scroll fade-up hook =====
+function useScrollFadeUp() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('is-visible');
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+}
+
+// ===== ScrollFadeUp wrapper =====
+const ScrollFadeUp = ({ children, delay }: { children: ReactNode; delay?: number }) => {
+  const ref = useScrollFadeUp();
+  return (
+    <div
+      ref={ref}
+      className="scroll-fade-up"
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    >
+      {children}
+    </div>
+  );
+};
+
+// ===== Animated number (RAF lerp) =====
+const AnimatedNumber = ({ value, prefix = '$', suffix = '' }: { value: number; prefix?: string; suffix?: string }) => {
+  const [display, setDisplay] = useState(value);
+  const prevRef = useRef(value);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to = value;
+    if (from === to) return;
+    const start = performance.now();
+    const duration = 400;
+    let raf: number;
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      setDisplay(Math.round(from + (to - from) * ease));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    prevRef.current = to;
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+
+  return <>{prefix}{display.toLocaleString()}{suffix}</>;
+};
+
+// ===== SwapCTA button =====
+const SwapCTA = ({
+  href,
+  defaultText,
+  revealText,
+  variant,
+}: {
+  href: string;
+  defaultText: string;
+  revealText: string;
+  variant: 'primary' | 'secondary';
+}) => (
+  <Link
+    href={href}
+    className={`hero-cta-pill hero-cta-pill-${variant}`}
+  >
+    <span className="hero-cta-text-wrap">
+      <span className="hero-cta-default">{defaultText}</span>
+      <span className="hero-cta-reveal">{revealText}</span>
+    </span>
+    <svg className="w-4 h-4 hero-cta-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  </Link>
+);
 
 // Feature data for carousel
 const features = [
@@ -666,13 +756,273 @@ const EditorialTestimonial = () => {
   );
 };
 
+// ===== Before Card =====
+const BeforeCard = () => (
+  <div className="bg-white rounded-2xl p-6 border border-black/[0.06] shadow-sm w-full">
+    <div className="flex items-center justify-between mb-5">
+      <span className="text-sm font-medium text-black/40">Your current setup</span>
+      <span className="text-[10px] font-medium uppercase tracking-wider text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Overdue</span>
+    </div>
+
+    {/* Scattered receipt snippets */}
+    <div className="relative h-[200px] overflow-hidden">
+      {/* Receipt 1 */}
+      <div className="absolute top-2 left-2 bg-[#F5F2EA] rounded-lg p-3 w-[140px] shadow-sm border border-black/[0.04]" style={{ transform: 'rotate(-3deg)' }}>
+        <div className="text-[9px] text-black/30 uppercase tracking-wider mb-1">Invoice #047</div>
+        <div className="text-lg serif text-black/20">$???</div>
+        <div className="mt-2 h-[1px] bg-black/[0.06]" />
+        <div className="text-[8px] text-red-400 mt-1">Missing</div>
+      </div>
+
+      {/* Receipt 2 */}
+      <div className="absolute top-4 right-0 bg-[#F5F2EA] rounded-lg p-3 w-[130px] shadow-sm border border-black/[0.04]" style={{ transform: 'rotate(2deg)' }}>
+        <div className="text-[9px] text-black/30 uppercase tracking-wider mb-1">Payment</div>
+        <div className="text-lg serif">$1,200</div>
+        <div className="mt-2 h-[1px] bg-black/[0.06]" />
+        <div className="text-[8px] text-black/30 mt-1">Uncategorized</div>
+      </div>
+
+      {/* Mini spreadsheet */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[#F5F2EA] rounded-lg p-2 w-[180px] shadow-sm border border-black/[0.04]" style={{ transform: 'rotate(1deg)' }}>
+        <div className="grid grid-cols-3 gap-[1px]">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="h-3 bg-white/80 rounded-[2px]" />
+          ))}
+        </div>
+        <div className="text-[8px] text-red-400 mt-2 text-right">Last updated: 3 weeks ago</div>
+      </div>
+
+      {/* Floating question marks */}
+      <div className="absolute top-12 left-[45%] text-xl serif text-black/[0.06] select-none" style={{ transform: 'rotate(15deg)' }}>?</div>
+      <div className="absolute bottom-16 right-6 text-lg serif text-black/[0.06] select-none" style={{ transform: 'rotate(-10deg)' }}>?</div>
+    </div>
+  </div>
+);
+
+// ===== After Card =====
+const AfterCard = () => (
+  <div className="bg-white rounded-2xl p-6 border border-black/[0.06] shadow-sm w-full">
+    <div className="flex items-center justify-between mb-5">
+      <span className="text-sm font-medium">October Overview</span>
+      <span className="text-[10px] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Updated: Just now</span>
+    </div>
+
+    {/* Revenue header */}
+    <div className="mb-5">
+      <div className="text-[10px] text-black/40 uppercase tracking-wider mb-1">Total Revenue</div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl serif">$12,400</span>
+        <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">+22%</span>
+      </div>
+    </div>
+
+    {/* Stat pills */}
+    <div className="flex flex-wrap gap-2 mb-5">
+      {[
+        { label: 'Avg Rate', value: '$95/hr' },
+        { label: 'Clients', value: '6' },
+        { label: 'On-time', value: '98%' },
+      ].map((stat) => (
+        <div key={stat.label} className="flex items-center gap-1.5 bg-[#F5F2EA] rounded-full px-3 py-1.5">
+          <span className="text-[10px] text-black/40">{stat.label}</span>
+          <span className="text-xs font-semibold">{stat.value}</span>
+        </div>
+      ))}
+    </div>
+
+    {/* Mini bar chart */}
+    <div className="flex items-end gap-1.5 h-16">
+      {[40, 55, 70, 45, 80, 65, 90, 75, 85, 60, 95, 88].map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 bg-[#FF9678] rounded-sm"
+          style={{ height: `${h}%`, opacity: i > 9 ? 0.4 : 1 }}
+        />
+      ))}
+    </div>
+    <div className="flex justify-between mt-1.5 text-[9px] text-black/30">
+      <span>Jan</span>
+      <span>Jun</span>
+      <span>Oct</span>
+    </div>
+  </div>
+);
+
+// ===== Before/After Section =====
+const BeforeAfterSection = () => {
+  const [showAfter, setShowAfter] = useState(false);
+
+  return (
+    <section className="py-12">
+      <ScrollFadeUp>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-white border border-black/10 rounded-full px-3 py-1.5 text-xs mb-4">
+            <svg className="w-3.5 h-3.5 text-black/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg> Transformation
+          </div>
+          <h2 className="text-4xl md:text-5xl serif mb-4">
+            From chaos to <span className="italic text-[#FF9678]">clarity</span>
+          </h2>
+
+          {/* Toggle */}
+          <div className="flex justify-center mt-6">
+            <div className="relative flex h-9 items-center rounded-full border border-black/10 bg-[#F5F2EA] p-0.5">
+              {['Before', 'After'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setShowAfter(tab === 'After')}
+                  className="relative z-[1] flex h-8 items-center justify-center px-5 cursor-pointer"
+                >
+                  {((tab === 'After' && showAfter) || (tab === 'Before' && !showAfter)) && (
+                    <div className="absolute inset-0 rounded-full bg-white border border-black/[0.06] shadow-sm" />
+                  )}
+                  <span className={`relative text-sm font-medium transition-colors duration-200 ${
+                    (tab === 'After' && showAfter) || (tab === 'Before' && !showAfter) ? 'text-[#1A1A18]' : 'text-black/40'
+                  }`}>
+                    {tab}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Card container — fixed height, absolute positioned cards */}
+        <div className="max-w-lg mx-auto relative" style={{ minHeight: 340 }}>
+          <div className={`absolute inset-0 ba-card ${showAfter ? 'ba-card-exit-left' : 'ba-card-enter'}`} style={{ pointerEvents: showAfter ? 'none' : 'auto' }}>
+            <BeforeCard />
+          </div>
+          <div className={`absolute inset-0 ba-card ${showAfter ? 'ba-card-enter' : 'ba-card-exit-right'}`} style={{ pointerEvents: showAfter ? 'auto' : 'none' }}>
+            <AfterCard />
+          </div>
+        </div>
+      </ScrollFadeUp>
+    </section>
+  );
+};
+
+// ===== ROI Calculator Section =====
+const ROICalculatorSection = () => {
+  const [rate, setRate] = useState(75);
+  const [hours, setHours] = useState(30);
+
+  const annualRevenue = rate * hours * 50;
+  const undercharged = Math.round(annualRevenue * 0.08);
+  const latePay = Math.round(annualRevenue * 0.035);
+  const taxSavings = Math.round(annualRevenue * 0.05);
+  const totalFound = undercharged + latePay + taxSavings;
+
+  return (
+    <section className="py-12">
+      <ScrollFadeUp>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-white border border-black/10 rounded-full px-3 py-1.5 text-xs mb-4">
+            <svg className="w-3.5 h-3.5 text-black/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg> Revenue Intelligence
+          </div>
+          <h2 className="text-4xl md:text-5xl serif mb-4">
+            See your <span className="italic text-[#FF9678]">hidden</span> revenue
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* Left — Input card */}
+          <div className="bg-white rounded-2xl p-6 border border-black/[0.06] shadow-sm">
+            <h3 className="text-lg font-medium mb-6">Your numbers</h3>
+
+            {/* Hourly rate slider */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm text-black/60">Hourly rate</label>
+                <span className="text-sm font-semibold serif">${rate}</span>
+              </div>
+              <input
+                type="range"
+                min={25}
+                max={300}
+                value={rate}
+                onChange={(e) => setRate(Number(e.target.value))}
+                className="roi-slider"
+              />
+              <div className="flex justify-between text-[10px] text-black/30 mt-1">
+                <span>$25</span>
+                <span>$300</span>
+              </div>
+            </div>
+
+            {/* Weekly hours slider */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm text-black/60">Hours per week</label>
+                <span className="text-sm font-semibold serif">{hours}h</span>
+              </div>
+              <input
+                type="range"
+                min={5}
+                max={60}
+                value={hours}
+                onChange={(e) => setHours(Number(e.target.value))}
+                className="roi-slider"
+              />
+              <div className="flex justify-between text-[10px] text-black/30 mt-1">
+                <span>5h</span>
+                <span>60h</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — Results card */}
+          <div className="bg-white rounded-2xl p-6 border border-black/[0.06] shadow-sm">
+            <div className="text-[10px] text-black/40 uppercase tracking-wider mb-1">Annual revenue</div>
+            <div className="text-4xl serif mb-6">
+              <AnimatedNumber value={annualRevenue} />
+            </div>
+
+            <div className="space-y-3 mb-6">
+              {[
+                { label: 'Undercharged hours', value: undercharged, icon: '~8%' },
+                { label: 'Late payment costs', value: latePay, icon: '~3.5%' },
+                { label: 'Tax savings missed', value: taxSavings, icon: '~5%' },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-2 border-b border-black/[0.04]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-black/30 bg-[#F5F2EA] rounded-full px-1.5 py-0.5 font-medium">{row.icon}</span>
+                    <span className="text-sm text-black/60">{row.label}</span>
+                  </div>
+                  <span className="text-sm font-semibold serif">
+                    <AnimatedNumber value={row.value} />
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Total highlight */}
+            <div className="bg-[#FF9678]/10 rounded-xl p-4">
+              <div className="text-[10px] text-black/40 uppercase tracking-wider mb-1">Pulse could find you</div>
+              <div className="text-2xl serif text-[#FF9678]">
+                <AnimatedNumber value={totalFound} />
+                <span className="text-sm font-normal text-black/40">/year</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ScrollFadeUp>
+    </section>
+  );
+};
+
 export default function HomePage() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [integrationsVisible, setIntegrationsVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navBadgeIndex, setNavBadgeIndex] = useState(0);
+  const [preloaderDone, setPreloaderDone] = useState(false);
   const integrationsRef = useRef<HTMLDivElement>(null);
+
+  // Preloader — dismiss after animation completes
+  useEffect(() => {
+    const timer = setTimeout(() => setPreloaderDone(true), 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const el = integrationsRef.current;
@@ -713,6 +1063,40 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen bg-[#F5F2EA]">
+      {/* Preloader */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: '#F5F2EA',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          opacity: preloaderDone ? 0 : 1,
+          visibility: preloaderDone ? 'hidden' as const : 'visible' as const,
+          transition: 'opacity 0.6s cubic-bezier(0.16,1,0.3,1), visibility 0.6s',
+          pointerEvents: preloaderDone ? 'none' as const : 'auto' as const,
+        }}
+      >
+        <div style={{ position: 'relative' }}>
+          <span className="serif" style={{ fontSize: 'clamp(48px, 10vw, 72px)', letterSpacing: '-0.04em' }}>
+            {'Pulse'.split('').map((letter, i) => (
+              <span
+                key={i}
+                className="preloader-letter"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                {letter}
+              </span>
+            ))}
+          </span>
+          <span className="preloader-underline" style={{ marginTop: 8 }} />
+        </div>
+        <div className="preloader-dot" style={{ marginTop: 24 }} />
+      </div>
+
       {/* Edge Lines - vertical lines on left and right */}
       <div className="edge-lines" />
 
@@ -895,25 +1279,9 @@ export default function HomePage() {
                 A fully customizable revenue tracker for freelancers, agencies, and independent professionals who want clarity on their finances.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/onboarding"
-                  className="inline-flex items-center justify-center gap-2 bg-[#1A1A18] text-white px-6 py-3.5 rounded-full text-sm font-medium hover:bg-[#2a2a28] transition-colors"
-                >
-                  Start free trial
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 bg-white border border-black/10 px-6 py-3.5 rounded-full text-sm font-medium hover:border-black/20 transition-colors"
-                >
-                  View demo
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+              <div className="flex flex-row gap-3">
+                <SwapCTA href="/onboarding" defaultText="Start free trial" revealText="No credit card" variant="primary" />
+                <SwapCTA href="/dashboard" defaultText="View demo" revealText="See it live" variant="secondary" />
               </div>
 
             </div>
@@ -967,6 +1335,7 @@ export default function HomePage() {
 
         {/* ===== TRUSTED BY ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section className="py-8">
           <p className="text-center text-xs text-black/40 uppercase tracking-wider mb-6">
             Works with your favorite platforms
@@ -987,9 +1356,11 @@ export default function HomePage() {
             ))}
           </Marquee>
         </section>
+        </ScrollFadeUp>
 
         {/* ===== HOW IT WORKS ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section id="how-it-works" className="py-12">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-white border border-black/10 rounded-full px-3 py-1.5 text-xs mb-4">
@@ -1027,7 +1398,7 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Card 1: Connect - Orbital Connection Style */}
-            <div className="card p-6 group transition-all duration-300">
+            <div className="card p-6 group transition-all duration-300 stagger-child">
               <div className="inline-flex items-center justify-center w-8 h-8 bg-[#F5F2EA] rounded-lg text-xs font-medium mb-4">
                 01
               </div>
@@ -1078,7 +1449,7 @@ export default function HomePage() {
             </div>
 
             {/* Card 2: Track - Revenue Chart */}
-            <div className="card p-6 group transition-all duration-300">
+            <div className="card p-6 group transition-all duration-300 stagger-child">
               <div className="inline-flex items-center justify-center w-8 h-8 bg-[#F5F2EA] rounded-lg text-xs font-medium mb-4">
                 02
               </div>
@@ -1122,7 +1493,7 @@ export default function HomePage() {
             </div>
 
             {/* Card 3: Insights - Analytics Dashboard */}
-            <div className="card p-6 group transition-all duration-300">
+            <div className="card p-6 group transition-all duration-300 stagger-child">
               <div className="inline-flex items-center justify-center w-8 h-8 bg-[#F5F2EA] rounded-lg text-xs font-medium mb-4">
                 03
               </div>
@@ -1170,9 +1541,15 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        </ScrollFadeUp>
+
+        {/* ===== BEFORE/AFTER ===== */}
+        <SectionDivider />
+        <BeforeAfterSection />
 
         {/* ===== FEATURES ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section id="features" className="py-12">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-white border border-black/10 rounded-full px-3 py-1.5 text-xs mb-4">
@@ -1189,9 +1566,15 @@ export default function HomePage() {
           {/* Cal.com style feature carousel */}
           <FeatureCarousel />
         </section>
+        </ScrollFadeUp>
+
+        {/* ===== ROI CALCULATOR ===== */}
+        <SectionDivider />
+        <ROICalculatorSection />
 
         {/* ===== TESTIMONIALS ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section className="py-12">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-white border border-black/10 rounded-full px-3 py-1.5 text-xs mb-4">
@@ -1207,9 +1590,11 @@ export default function HomePage() {
 
           <EditorialTestimonial />
         </section>
+        </ScrollFadeUp>
 
         {/* ===== PRICING ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section id="pricing" className="py-12">
           <div className="mb-10">
             <div className="max-w-xl mx-auto text-center">
@@ -1295,7 +1680,7 @@ export default function HomePage() {
             ].map((tier) => (
               <div
                 key={tier.name}
-                className={`relative grid grid-rows-[auto_auto_1fr] rounded-2xl ${
+                className={`relative grid grid-rows-[auto_auto_1fr] rounded-2xl stagger-child ${
                   tier.name === 'Team' ? 'hidden lg:grid' : ''
                 } ${
                   tier.popular
@@ -1372,9 +1757,11 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        </ScrollFadeUp>
 
         {/* ===== INTEGRATIONS ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section className="py-12">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-white border border-black/10 rounded-full px-3 py-1.5 text-xs mb-4">
@@ -1447,9 +1834,11 @@ export default function HomePage() {
             More integrations added every month
           </p>
         </section>
+        </ScrollFadeUp>
 
         {/* ===== FAQ ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section className="py-14">
           {/* Editorial header — left-aligned with decorative number */}
           <div className="max-w-3xl mx-auto mb-16">
@@ -1552,9 +1941,11 @@ export default function HomePage() {
             <div className="h-[1px] bg-black/[0.06]" />
           </div>
         </section>
+        </ScrollFadeUp>
 
         {/* ===== FINAL CTA ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <section className="py-8">
           <div className="card p-12 md:p-16 text-center">
             <h2 className="text-4xl md:text-6xl serif mb-4">
@@ -1564,31 +1955,17 @@ export default function HomePage() {
               Join 2,400+ freelancers who&apos;ve taken control of their finances with Pulse.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/onboarding"
-                className="inline-flex items-center gap-2 bg-[#1A1A18] text-white px-8 py-4 rounded-full font-medium hover:bg-[#2a2a28] transition-colors"
-              >
-                Start free trial
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 border border-black/10 px-8 py-4 rounded-full font-medium hover:border-black/20 transition-colors"
-              >
-                Book a demo
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+            <div className="flex flex-row items-center justify-center gap-3">
+              <SwapCTA href="/onboarding" defaultText="Start free trial" revealText="It's free forever" variant="primary" />
+              <SwapCTA href="/dashboard" defaultText="Book a demo" revealText="Takes 2 minutes" variant="secondary" />
             </div>
           </div>
         </section>
+        </ScrollFadeUp>
 
         {/* ===== FOOTER ===== */}
         <SectionDivider />
+        <ScrollFadeUp>
         <footer className="pt-12 pb-8 overflow-hidden">
           {/* Giant typographic moment */}
           <div className="group relative select-none mb-12 cursor-pointer">
@@ -1627,6 +2004,7 @@ export default function HomePage() {
             </p>
           </div>
         </footer>
+        </ScrollFadeUp>
         <SectionDivider />
       </main>
     </div>

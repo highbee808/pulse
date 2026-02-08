@@ -586,3 +586,252 @@ body.menu-open {
   background: var(--c-salmon);
   color: var(--c-ink);
 }
+
+/* ===== Scroll-triggered fade-up ===== */
+.scroll-fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children for card grids */
+.stagger-child {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.is-visible .stagger-child:nth-child(1) { transition-delay: 100ms; }
+.is-visible .stagger-child:nth-child(2) { transition-delay: 200ms; }
+.is-visible .stagger-child:nth-child(3) { transition-delay: 300ms; }
+.is-visible .stagger-child:nth-child(4) { transition-delay: 400ms; }
+
+.is-visible .stagger-child {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Text-swap CTA button (TaskRite style) ===== */
+.hero-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .hero-cta-pill {
+    gap: 8px;
+    font-size: 14px;
+  }
+}
+
+.hero-cta-pill-primary {
+  background: #1A1A18;
+  color: white;
+  padding: 12px 16px;
+}
+
+@media (min-width: 640px) {
+  .hero-cta-pill-primary {
+    padding: 14px 24px;
+  }
+}
+
+.hero-cta-pill-primary:hover {
+  background: #2a2a28;
+}
+
+.hero-cta-pill-secondary {
+  background: white;
+  color: #1A1A18;
+  border: 1px solid rgba(0,0,0,0.1);
+  padding: 12px 16px;
+}
+
+@media (min-width: 640px) {
+  .hero-cta-pill-secondary {
+    padding: 14px 24px;
+  }
+}
+
+.hero-cta-pill-secondary:hover {
+  border-color: rgba(0,0,0,0.2);
+}
+
+.hero-cta-text-wrap {
+  display: inline-grid;
+  overflow: hidden;
+  height: 1.2em;
+}
+
+.hero-cta-text-wrap > span {
+  grid-area: 1 / 1;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.hero-cta-default {
+  transform: translateY(0);
+}
+
+.hero-cta-reveal {
+  transform: translateY(100%);
+}
+
+.hero-cta-pill:hover .hero-cta-default {
+  transform: translateY(-100%);
+}
+
+.hero-cta-pill:hover .hero-cta-reveal {
+  transform: translateY(0);
+}
+
+.hero-cta-arrow {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.hero-cta-pill:hover .hero-cta-arrow {
+  transform: translateX(3px);
+}
+
+/* ===== Before/After card transition ===== */
+.ba-card {
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ba-card-enter {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.ba-card-exit-left {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.ba-card-exit-right {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+/* ===== ROI Calculator slider ===== */
+.roi-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #F5F2EA;
+  outline: none;
+  cursor: pointer;
+}
+
+.roi-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FF9678;
+  border: 3px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.roi-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(255,150,120,0.3);
+}
+
+.roi-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FF9678;
+  border: 3px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+.roi-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #F5F2EA;
+}
+
+/* ===== Preloader animations ===== */
+/* Positioning handled via inline styles for reliability */
+
+/* Pulse word — letter-by-letter stagger */
+@keyframes preloader-letter {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.9);
+    filter: blur(4px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.preloader-letter {
+  display: inline-block;
+  opacity: 0;
+  animation: preloader-letter 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Salmon underline sweep */
+@keyframes preloader-underline {
+  0% { transform: scaleX(0); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+.preloader-underline {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-salmon);
+  transform-origin: left;
+  transform: scaleX(0);
+  opacity: 0;
+  animation: preloader-underline 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.6s;
+}
+
+/* Subtle dot pulse below the word */
+@keyframes preloader-dot {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.preloader-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-salmon);
+  animation: preloader-dot 1.2s ease-in-out infinite;
+}
