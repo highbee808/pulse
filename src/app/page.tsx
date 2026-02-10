@@ -1349,7 +1349,7 @@ export default function HomePage() {
             autoFill={true}
           >
             {integrationPlatforms.slice(0, 9).map(({ name, Logo }) => (
-              <span key={name} className="inline-flex items-center gap-2 text-black/25" style={{ marginLeft: '3rem', marginRight: '3rem' }}>
+              <span key={name} className="inline-flex items-center gap-2 text-black/25 mx-5 sm:mx-8 md:mx-12">
                 <Logo />
                 <span className="text-base font-semibold tracking-tight">{name}</span>
               </span>
